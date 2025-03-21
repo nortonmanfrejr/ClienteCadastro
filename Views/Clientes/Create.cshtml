@@ -1,0 +1,149 @@
+﻿@model ClienteCadastroApplication.Models.ClientesViewModel
+@using ClienteCadastroApplication.Controllers
+@using ClienteCadastroApplication.Tools
+
+@{
+    var htmlAttr = new Dictionary<string, object>();
+    var route = Model.RouteRegistry(Model.Clientes);
+    var isEdit = Model.Origin == nameof(ClientesController.Edit);
+
+    var CreateEdit = isEdit ? "Editar" : "Novo";
+    var Title = $"{CreateEdit} - {Model.Title}";
+}
+
+
+@using (Html.BeginForm(null, null, FormMethod.Post))
+{
+    <div class="alert alert-secondary d-flex justify-content-between align-items-center">
+        <div>
+            <span class="h3">@Title</span>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-success btn-sm">
+                <i class='bi bi-fw bi-check' aria-hidden='true'></i>
+                Salvar
+            </button>
+
+            @if (isEdit)
+            {
+                var link = Url.Action(nameof(ClientesController.Delete), route);
+                var deleteButton = $"<a href='{link}' class='btn btn-danger btn-sm'><i class='bi bi-trash' aria-hidden='true'></i>Excluir</a>";
+                @Html.Raw(deleteButton)
+            }
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header" id="cardHeaderGen" style="clear:both;">
+            <div class="row" style="float:left;">
+                <button class="btn" type="button" tabindex="-1" data-toggle="collapse" data-target="#collapseGen" aria-expanded="true" aria-controls="collapseGen">
+                    <i class="fa fa-lg fa-angle-double-dow" aria-hidden="true"></i>
+                </button>
+                <h5 style="margin:auto;">Geral</h5>
+            </div>
+        </div>
+        <div id="collapseGen" class="collapse show" aria-labelledby="cardHeaderGen">
+            <div class="card-body">
+                @Html.HiddenFor(x => x.Clientes.Id)
+                <div class="row">
+                    <div class="col-lg-4 d-flex flex-column">
+                        @{
+                            htmlAttr = new Dictionary<string, object>();
+                            htmlAttr.Add("class", "form-control");
+                            htmlAttr.Add("required", "required");
+                        }
+                        <strong>@Html.LabelFor(x => x.Clientes.Nome)</strong>
+                        @Html.EditorFor(x => x.Clientes.Nome, new { htmlAttr })
+                        @Html.ValidationMessageFor(x => x.Clientes.Nome, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-2 d-flex flex-column">
+                        @{
+                            htmlAttr = new Dictionary<string, object>();
+                            htmlAttr.Add("class", "form-select selectpicker");
+                            htmlAttr.Add("required", "required");
+                        }
+                        <strong>@Html.LabelFor(x => x.Clientes.Tipo)</strong>
+                        @Html.DropDownListFor(x => x.Clientes.Tipo, DocT.GetSelListTipo(DocT.DefTipo), new { htmlAttr })
+                        @Html.ValidationMessageFor(x => x.Clientes.Tipo, "", new { @class = "text-danger" })
+                    </div>
+                    <div class="col-lg-3 d-flex flex-column">
+                        @{
+                            htmlAttr = new Dictionary<string, object>();
+                            htmlAttr.Add("class", "form-control cpf");
+                            htmlAttr.Add("required", "required");
+                        }
+                        <strong>@Html.LabelFor(x => x.Clientes.Documento)</strong>
+                        @Html.EditorFor(x => x.Clientes.Documento, new { htmlAttr })
+                        @Html.ValidationMessageFor(x => x.Clientes.Documento, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-3 d-flex flex-column">
+                        @{
+                            htmlAttr = new Dictionary<string, object>();
+                            htmlAttr.Add("class", "form-control phone");
+                            htmlAttr.Add("required", "required");
+                        }
+                        <strong>@Html.LabelFor(x => x.Clientes.Telefone)</strong>
+                        @Html.EditorFor(x => x.Clientes.Telefone, new { htmlAttr })
+                        @Html.ValidationMessageFor(x => x.Clientes.Telefone, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-3 d-flex flex-column">
+                        @{
+                            htmlAttr = new Dictionary<string, object>();
+                            htmlAttr.Add("class", "form-control datepicker");
+                            htmlAttr.Add("type", "DateTime");
+                            htmlAttr.Add("autocomplete", "off");
+                            htmlAttr.Add("readonly", "readonly");
+                        }
+                        <strong>@Html.LabelFor(x => x.Clientes.DataCadastro)</strong>
+                        @Html.EditorFor(x => x.Clientes.DataCadastro, new { htmlAttr })
+                        @Html.ValidationMessageFor(x => x.Clientes.DataCadastro, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    <script>
+        function applyMask() {
+            let tipo = document.getElementById("Clientes_Tipo").value;
+            let documento = document.getElementById("Clientes_Documento");
+            let telefone = document.getElementById("Clientes_Telefone");
+
+            documento.value = documento.value.replace(/\D/g, "");
+            telefone.value = telefone.value.replace(/\D/g, "");
+
+            if (tipo === "PF") {
+                documento.setAttribute("maxlength", "14");
+                documento.value = documento.value
+                    .replace(/^(\d{3})(\d)/, "$1.$2")
+                    .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
+                    .replace(/\.(\d{3})(\d)/, ".$1-$2");
+            } else if (tipo === "PJ") {
+                documento.setAttribute("maxlength", "18");
+                documento.value = documento.value
+                    .replace(/^(\d{2})(\d)/, "$1.$2")
+                    .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
+                    .replace(/\.(\d{3})(\d)/, ".$1/$2")
+                    .replace(/(\d{4})(\d)/, "$1-$2");
+            }
+
+            telefone.setAttribute("maxlength", "14");
+            telefone.value = telefone.value
+                .replace(/^(\d{2})(\d)/, "($1) $2")
+                .replace(/(\(\d{2}\))(\d{5})(\d)/, "$1 $2-$3");
+        }
+
+        document.getElementById("Clientes_Tipo").addEventListener("change", applyMask);
+        document.getElementById("Clientes_Documento").addEventListener("input", applyMask);
+        document.getElementById("Clientes_Telefone").addEventListener("input", applyMask);
+    </script>
+}
